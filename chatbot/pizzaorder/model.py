@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 @attr.s
 class PizzaOrder(object):
+    """Данные заказа."""
     uid = attr.ib(type=int, default=None)
     size = attr.ib(type=str, default=None)
     payment_method = attr.ib(type=str, default=None)
@@ -21,9 +22,13 @@ class PizzaOrder(object):
 
 
 class PizzaOrderModel(common.IMessageHandler):
+    """Модель FSM для работы с заказом пиццы."""
 
-    def __init__(self, uid):
+    def __init__(self, uid, state_clses, user_interface):
         self._pizza_order = PizzaOrder(uid=uid)
+        # экземпляр IUserInterface
+        self._user_interface = user_interface
+        self._user_interface.model = self
 
         def on_enter_cb():
             """Отправка сообщения при входе в состояние"""
@@ -32,8 +37,7 @@ class PizzaOrderModel(common.IMessageHandler):
             self.send_message(msg)
 
         states = []
-        conditions=[]
-        for state_cls in state.pizza_order_state_clses:
+        for state_cls in state_clses:
             inst = state_cls(name=state_cls.state,
                              on_enter=on_enter_cb)
             states.append(inst)
@@ -55,8 +59,7 @@ class PizzaOrderModel(common.IMessageHandler):
 
     def on_get_message(self, msg):
         """Метод срабатывает, когда получено сообщение."""
-#         logger.debug(u'msg = %s', msg)
-        logger.debug(msg)
+        logger.debug(u'msg = %s', msg)
         state_inst = self.machine.get_state(self.state)
         try:
             state_inst.validate(msg)
@@ -75,54 +78,15 @@ class PizzaOrderModel(common.IMessageHandler):
             else:
                 # TODO: (burov_alexey@mail.ru 11 июн. 2020 г. 13:58:47) 
                 # Перекидываем его на узел изменения заказа
+
+                # (burov_alexey@mail.ru 11 июн. 2020 г. 20:12:14) 
+                # Перекидываем куда-нибудь данные заказа и сохраняем историю 
+                # в БД, если нужно, например, отслеживать состояние (готова / едет) и т.д. 
                 return
         
         self.next_state()
-                
-    
+
     def send_message(self, msg):
         """Отправить сообщение."""
-#         logger.debug(u'msg = %s', msg)
-        logger.debug(msg)
-
-
-# config = {
-#     'states': ['greeting', 'waiting_for_pizza_size', 'error'],
-#     'transitions': {
-#         'trigger': 'melt',
-#         'source': 'solid',
-#         'dest': 'liquid',
-#         'before': 'make_hissing_noises'
-#     },
-# }
-
-#         # уникальный идентификатор пользователя
-#         self._uid = uid
-#         # стек состояния, чтобы можно было откатиться к предыдущему
-#         self._state_stack = []
-#         self._help = 'You can back to the previous state or cancel your order.'
-#         self._error_msg = None
-
-
-#     def on_enter_state(self):
-#         self._state_stack.append(self.state)
-# 
-#     def on_exit_state(self):
-#         if self._state_stack[-1] == self.state:
-#             self._state_stack.pop()
-#         else:
-#             # TODO: (burov_alexey@mail.ru 11 июн. 2020 г. 10:08:36) 
-#             # Хотя такой ситуации не должно быть
-#             self._state_stack.remove(self.state)
-
-
-# transitions = [
-#     ['proceed', States.GREETING, States.WAITING_FOR_PIZZA_SIZE],
-#     ['proceed', States.WAITING_FOR_PIZZA_SIZE, States.WAITING_FOR_PAYMENT_METHOD],
-#     ['proceed', States.WAITING_FOR_PAYMENT_METHOD, States.WAITING_FOR_CONFIRM],
-#     ['proceed', States.WAITING_FOR_CONFIRM, States.GRATITUDE],
-#     ['privious', States.WAITING_FOR_CONFIRM, States.WAITING_FOR_PAYMENT_METHOD],
-#     ['privious', States.WAITING_FOR_PAYMENT_METHOD, States.WAITING_FOR_PIZZA_SIZE],
-#     ['error', '*', States.ERROR],
-# ]
-
+        logger.debug(u'msg = %s', msg)
+        self._user_interface.send_message(msg)

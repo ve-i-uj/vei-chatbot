@@ -61,7 +61,7 @@ class PaymentMethodState(_PizzaOrderState):
     """Состояние ожидания способа оплаты."""
     state = StateEnum.WAITING_FOR_PAYMENT_METHOD
 
-    _cash_payment = (u'нал', u'наличка', u'налик', u'наличный', u'наличкой')
+    _cash_payment = (u'нал', u'наличка', u'налик', u'наличный', u'наличкой', u'кэш')
     _card_payment = (u'картой', u'безнал', u'безналом', u'карта', u'безналичный')
     _valid_msg = set(_cash_payment + _card_payment)
     _hint = (u'Не понимаю ваш ответ. Введите, пожалуйста, "%s" или "%s" '

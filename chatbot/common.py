@@ -33,12 +33,20 @@ class IDialogState(IMsgState):
         pass
 
 
-class IIOMessage:
-    """Интерфейс ввода / вывода данных.
+class IUserInterface:
+    """Интерфейс взаимодействия с пользователем (ввод / вывод данных).
     
     Класс принимает собщение и вызывает колбэк модели.
     """
-    pass
+    
+    @property
+    def model(self):
+        """Получить модель (наследник IMessageHandler)"""
+        pass
+
+    def send_message(self, msg):
+        """Отправить сообщение в UI."""
+        pass
 
 
 class IMessageHandler:
