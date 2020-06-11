@@ -1,0 +1,14 @@
+# python cache
+__pycache__
+*.pyc
+*.pyo
+
+# eclipse
+.project
+.pydevproject
+.settings/
+
+# The directory of python virtual enviroment
+.pyvenv
+.py2venv
+
