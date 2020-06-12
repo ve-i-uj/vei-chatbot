@@ -7,7 +7,7 @@ from telegram.ext import MessageHandler, Filters
 
 from chatbot import common
 
-TOKEN = '1211214680:AAHGNFx7RvU-uS5AYFc8cLLG-TUUoVNnLUQ'
+TOKEN = '123'
 
 
 class TelegramUI(common.IUserInterface):
