@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Входная точка для запуска бота."""
 
+from __future__ import unicode_literals
+
 import argparse
 import logging
 
@@ -14,7 +16,7 @@ def read_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('--ui', dest='ui', type=str, choices=['cli', 'telegram'],
+    parser.add_argument('--ui', dest='ui', type=str, choices=['cli', 'tlgrm'],
                         help='User Interface of the bot')
     parser.add_argument('--log-level-name', dest='log_level', type=str,
                         choices=[n for n in logging._levelNames.values() if isinstance(n, str)],
@@ -31,11 +33,12 @@ def main():
     log.setup_root_logger(namespace.log_level)
     if namespace.ui == 'cli':
         from chatbot.ui import cli
-        ui = cli.CLI()
-        _model = pizzaorder.PizzaOrderModel(uid=1, user_interface=ui)
+        ui = cli.CLI(model_cls=pizzaorder.PizzaOrderModel)
         ui.run()
-    elif namespace.ui == 'telegram':
-        pass
+    elif namespace.ui == 'tlgrm':
+        from chatbot.ui import tlgrm
+        ui = tlgrm.TelegramUI(model_cls=pizzaorder.PizzaOrderModel)
+        ui.run()
         
 
 if __name__ == '__main__':

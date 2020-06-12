@@ -38,18 +38,13 @@ class IUserInterface:
     
     Класс принимает собщение и вызывает колбэк модели.
     """
-    
-    @property
-    def model(self):
-        """Получить модель (наследник IMessageHandler)"""
+
+    def __init__(self, model_cls):
+        # здесь проиходит инициализация модели. Чтобы делать по одной моделе
+        # на каждое подключение (подключение - это IMessageHandler).
         pass
 
-    @model.setter
-    def model(self, value):
-        """Сеттер"""
-        pass
-
-    def send_message(self, msg):
+    def send_message(self, uid, msg):
         """Отправить сообщение в UI."""
         pass
 

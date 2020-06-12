@@ -12,7 +12,6 @@ from chatbot.pizzaorder.state import StateEnum
 
 logger = logging.getLogger(__name__)
 
-
 pizza_order_transitions = [
     # у этих состояний переход линейный, поэтому триггер одни и тот же
     ['proceed', StateEnum.GREETING, StateEnum.WAITING_FOR_PIZZA_SIZE],
@@ -42,10 +41,10 @@ class PizzaOrderModel(common.IMessageHandler):
     """Модель FSM для работы с заказом пиццы."""
 
     def __init__(self, uid, user_interface):
+        self._uid = uid
         self._pizza_order = PizzaOrder(uid=uid)
         # экземпляр IUserInterface
         self._user_interface = user_interface
-        self._user_interface.model = self
 
         # нужно добавить колбэк состоянию при инициализации,
         # поэтому заменяется имя состояния на экземпляр
@@ -81,10 +80,9 @@ class PizzaOrderModel(common.IMessageHandler):
             transitions=new_transitions,
             ignore_invalid_triggers=True
         )
-        
-        self.init()
 
     def init(self):
+        """Первое сообщение и переход из начального состояния."""
         # дернем руками приветсвенное сообщение начального состояния
         state_inst = self.machine.get_state(self.state)
         msg = state_inst.build_init_message(self._pizza_order)
@@ -102,7 +100,7 @@ class PizzaOrderModel(common.IMessageHandler):
             hint = err.message
             self.send_message(hint)
             return
-        
+
         if state_inst.state == state.StateEnum.WAITING_FOR_PIZZA_SIZE:
             self._pizza_order.size = msg
             self.proceed()
@@ -123,19 +121,17 @@ class PizzaOrderModel(common.IMessageHandler):
         elif state_inst.state == state.StateEnum.WAITING_FOR_NEW_ORDER:
             self.new_order()
             self.proceed()
-            
 
-        # (burov_alexey@mail.ru 11 июн. 2020 г. 20:12:14) 
-        # Перекидываем куда-нибудь данные заказа и сохраняем историю 
-        # в БД, если нужно, например, отслеживать состояние (готова / едет) и т.д. 
-        
+        # (burov_alexey@mail.ru 11 июн. 2020 г. 20:12:14)
+        # Перекидываем куда-нибудь данные заказа и сохраняем историю
+        # в БД, если нужно, например, отслеживать состояние (готова / едет) и т.д.
 
     def send_message(self, msg):
         """Отправить сообщение."""
         logger.debug(u'msg = %s', msg)
         if not msg.strip():
-            # TODO: (burov_alexey@mail.ru 12 июн. 2020 г. 11:18:30) 
+            # TODO: (burov_alexey@mail.ru 12 июн. 2020 г. 11:18:30)
             # Когда диалог, но ничего не отправляет. Нужен отдельный интерфейс,
             # и специальная логика. Пока так.
             return
-        self._user_interface.send_message(msg)
+        self._user_interface.send_message(self._uid, msg)

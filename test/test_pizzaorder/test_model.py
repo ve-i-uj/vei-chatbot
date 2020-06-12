@@ -12,20 +12,12 @@ from chatbot.pizzaorder import model
 class TestUI(object, common.IUserInterface):
     """Интерфейс взаимодействия с пользователем через командную строку."""
 
-    def __init__(self):
-        self._model = None
+    def __init__(self, model_cls):
+        self._model = model_cls(1, user_interface=self)
         # смотреть какие сообщения "отправлены" и сколько их
         self.msges = []
 
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, value):
-        self._model = value
-
-    def send_message(self, msg): 
+    def send_message(self, uid, msg): 
         self.msges.append(msg)
 
 
@@ -35,11 +27,9 @@ class DialogTestCase(unittest.TestCase):
      
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self._test_ui = TestUI()
-        self._model = pizzaorder.PizzaOrderModel(
-            uid=1,
-            user_interface=self._test_ui
-        )
+        self._test_ui = TestUI(pizzaorder.PizzaOrderModel)
+        self._model = self._test_ui._model
+        self._model.init()
  
     # TODO: (burov_alexey@mail.ru 12 июн. 2020 г. 08:48:27) 
     # Нужно разбить на маленькие тесты.
@@ -62,7 +52,7 @@ class DialogTestCase(unittest.TestCase):
         # чистим сообщения
         self._test_ui.msges[:] = []
         # Ответ пользоватеся
-        self._test_ui.model.on_get_message(u'Большую')
+        self._test_ui._model.on_get_message(u'Большую')
         # теперь нужное состояние (оно переключилось)
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          state.PaymentMethodState.state)
@@ -75,7 +65,7 @@ class DialogTestCase(unittest.TestCase):
         # чистим сообщения
         self._test_ui.msges[:] = []
      
-        self._test_ui.model.on_get_message(u'Картой')
+        self._test_ui._model.on_get_message(u'Картой')
         # теперь нужное состояние (оно переключилось)
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          state.ConfirmState.state)
@@ -89,7 +79,7 @@ class DialogTestCase(unittest.TestCase):
         # чистим сообщения
         self._test_ui.msges[:] = []
      
-        self._test_ui.model.on_get_message(u'Да')
+        self._test_ui._model.on_get_message(u'Да')
         # теперь нужное состояние (оно переключилось)
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          state.StateEnum.WAITING_FOR_NEW_ORDER)
@@ -108,11 +98,9 @@ class MsgStateTestCase:
     _init_state = None
  
     def setUp(self):
-        self._test_ui = TestUI()
-        self._model = pizzaorder.PizzaOrderModel(
-            uid=1,
-            user_interface=self._test_ui
-        )
+        self._test_ui = TestUI(model_cls=pizzaorder.PizzaOrderModel)
+        self._model = self._test_ui._model
+        self._model.init()
         state_name = self._init_state.state.name
         should_be_previous_state = self._model.machine.get_state(state_name)
         self._model.machine.set_state(should_be_previous_state)
@@ -140,7 +128,7 @@ class DialogStateTestCase(MsgStateTestCase):
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          self._init_state.state)
  
-        self._test_ui.model.on_get_message(u'--- Неизвестный ввод ---')
+        self._test_ui._model.on_get_message(u'--- Неизвестный ввод ---')
         # остались в том же состоянии
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          self._init_state.state)
@@ -192,7 +180,7 @@ class CancelStateTestCase(MsgStateTestCase, unittest.TestCase):
     def test_next_state_no(self):
         """Нужно проверить, что после отмены перешли на заполнение по новой."""
         # Переходим в нужно состояние, отправив "нет"
-        self._test_ui.model.on_get_message(u'Нет')
+        self._test_ui._model.on_get_message(u'Нет')
         # И после перехода мы на WAITING_FOR_PIZZA_SIZE
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
                          state.StateEnum.WAITING_FOR_PIZZA_SIZE)
@@ -200,7 +188,7 @@ class CancelStateTestCase(MsgStateTestCase, unittest.TestCase):
     def test_next_state_yes(self):
         """Нужно проверить, что после отмены перешли на заполнение по новой."""
         # Переходим в нужно состояние, отправив "да"
-        self._test_ui.model.on_get_message(u'Да')
+        self._test_ui._model.on_get_message(u'Да')
         # И после перехода мы на благодарим за заказ и ждём любого вводе, чтобы
         # сделать новый заказ, т.е. на GREETING
         
@@ -210,10 +198,10 @@ class CancelStateTestCase(MsgStateTestCase, unittest.TestCase):
         self.assertEqual(self._test_ui.msges[0],
                          state.GratitudeState.build_init_message(None))    
 
-        self._test_ui.model.on_get_message(u'Что угодно')
+        self._test_ui._model.on_get_message(u'Что угодно')
 
         self.assertEqual(self._model.machine.get_state(self._model.state).state,
-                         state.StateEnum.GREETING)
+                         state.StateEnum.WAITING_FOR_PIZZA_SIZE)
 
         
 if __name__ == '__main__':
