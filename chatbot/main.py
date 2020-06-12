@@ -17,17 +17,9 @@ def main():
         ui = cli.CLI()
         model = pizzaorder.PizzaOrderModel(
             uid=1,
-            state_clses=pizzaorder.pizza_order_state_clses,
             user_interface=ui
         )
         ui.run()
-#     log.setup_root_logger('DEBUG')
-#     logging.getLogger('transitions').setLevel(logging.ERROR)
-#     model = pizzaorder.PizzaOrderModel(1, pizzaorder.pizza_order_state_clses)
-#     model.on_get_message(u'Большую')
-#     model.on_get_message(u'Картой')
-#     model.on_get_message(u'хз')
-#     model.on_get_message(u'да')
     
 
 if __name__ == '__main__':

@@ -44,6 +44,11 @@ class IUserInterface:
         """Получить модель (наследник IMessageHandler)"""
         pass
 
+    @model.setter
+    def model(self, value):
+        """Сеттер"""
+        pass
+
     def send_message(self, msg):
         """Отправить сообщение в UI."""
         pass

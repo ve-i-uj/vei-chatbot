@@ -37,13 +37,11 @@ class _ReadingInputThread(threading.Thread):
             except EOFError:
                 # Эта ошибка возникает при остановке главного треда
                 return
-            if not msg.strip():
-                continue
             msg = unicode(msg, sys.stdout.encoding)
             self._queue.put_nowait(msg)
 
 
-class CLI(common.IUserInterface):
+class CLI(object, common.IUserInterface):
     """Интерфейс взаимодействия с пользователем через командную строку."""
 
     def __init__(self):

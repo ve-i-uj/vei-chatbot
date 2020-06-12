@@ -14,6 +14,8 @@ class StateEnum(enum.Enum):
     WAITING_FOR_PAYMENT_METHOD = 3
     WAITING_FOR_CONFIRM = 4
     GRATITUDE = 5
+    CANCEL_ORDER = 6
+    WAITING_FOR_NEW_ORDER = 7
 
 ANY_MESSAGE = object()
 
@@ -28,7 +30,7 @@ class GreetingState(IMsgState, transitions.State):
 
 
 class _PizzaOrderState(IDialogState, transitions.State):
-    """Родительский класс для состояний связанных только с заказом пиццы."""
+    """Родительский класс для диалогов, связанных с заказом пиццы."""
     state = StateEnum.ERROR
     
     _valid_msg = None
@@ -96,7 +98,36 @@ class GratitudeState(IMsgState, transitions.State):
         return u'Спасибо за заказ.'
 
 
-pizza_order_state_clses = [
-    GreetingState, PizzaSizeState, PaymentMethodState, ConfirmState,
-    GratitudeState
-]
+class CancelOrderState(IMsgState, transitions.State):
+    """Отмена заказа."""
+    state = StateEnum.CANCEL_ORDER
+    
+    @classmethod
+    def build_init_message(cls, pizza_order):
+        return u'Введите данные заказа ещё раз'
+
+
+# TODO: (burov_alexey@mail.ru 12 июн. 2020 г. 11:21:30) 
+# По быстрому сделал, как диалог, но так что-то просто ждущее любого ввода
+class WaitingForNewOrderState(IDialogState, transitions.State):
+    """Ожидание нового заказа."""
+    state = StateEnum.WAITING_FOR_NEW_ORDER
+    
+    @classmethod
+    def build_init_message(cls, pizza_order):
+        return u''
+
+    def validate(self, answer):
+        # Любой ввод
+        return True
+
+
+pizza_order_state_clses = {
+    GreetingState.state: GreetingState,
+    PizzaSizeState.state: PizzaSizeState,
+    PaymentMethodState.state: PaymentMethodState,
+    ConfirmState.state: ConfirmState,
+    GratitudeState.state: GratitudeState,
+    CancelOrderState.state: CancelOrderState,
+    WaitingForNewOrderState.state: WaitingForNewOrderState
+}
